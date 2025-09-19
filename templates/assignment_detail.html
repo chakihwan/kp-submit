@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}과제 상세{% endblock %}
+{% block content %}
+<div class="grid gap-4">
+    <div class="rounded-2xl border bg-white p-4 shadow-sm">
+        <div class="flex items-start justify-between">
+            <div>
+                <div class="text-xs text-gray-500">{{ course.title }}</div>
+                <div class="text-2xl font-bold">{{ a.title }}</div>
+                <div class="text-sm text-gray-500 mt-1">마감: {{ a.due_at }} · 상태: {{ a.status }}</div>
+            </div>
+            <a href="{% url 'submission_form' %}" class="px-4 py-2 rounded-xl bg-gray-900 text-white">제출하기</a>
+        </div>
+        <p class="text-sm text-gray-600 mt-3">
+            설명: 과제 요구사항을 따르고, PDF로 제출하세요. 코드가 있을 경우 ZIP 포함.
+        </p>
+    </div>
+    <div class="rounded-2xl border bg-white p-4 shadow-sm">
+        <div class="font-semibold mb-2">제출 현황</div>
+        <div class="overflow-auto rounded-xl border">
+            <table class="min-w-full text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-2">학생</th>
+                        <th class="px-3 py-2">상태</th>
+                        <th class="px-3 py-2">시간</th>
+                        <th class="px-3 py-2">점수</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-t">
+                        <td class="px-3 py-2">홍길동</td>
+                        <td class="px-3 py-2 text-green-700">제출</td>
+                        <td class="px-3 py-2">오늘 13:20</td>
+                        <td class="px-3 py-2">-</td>
+                    </tr>
+                    <tr class="border-t">
+                        <td class="px-3 py-2">김철수</td>
+                        <td class="px-3 py-2">미제출</td>
+                        <td class="px-3 py-2">-</td>
+                        <td class="px-3 py-2">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

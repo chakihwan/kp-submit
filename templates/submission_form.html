@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}제출 작성{% endblock %}
+{% block content %}
+<div class="rounded-2xl border bg-white p-4 shadow-sm">
+    <div class="font-semibold mb-3">제출 작성</div>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="grid gap-3">
+            <div>
+                <label class="text-sm text-gray-600">제출 메모</label>
+                <textarea class="w-full mt-1 border rounded-xl p-3" rows="4" placeholder="간단한 설명을 입력하세요."></textarea>
+            </div>
+            <div>
+                <label class="text-sm text-gray-600">파일 첨부</label>
+                <input type="file" class="mt-1" />
+                <p class="text-xs text-gray-500 mt-1">허용: PDF/ZIP</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button class="px-4 py-2 rounded-xl bg-gray-200" type="button">임시저장</button>
+                <button class="px-4 py-2 rounded-xl bg-gray-900 text-white" type="submit">제출하기</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

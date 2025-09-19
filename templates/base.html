@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}과제 제출 시스템{% endblock %}</title>
+    <!-- 빠른 시범용 Tailwind CDN | 배포 시 정적 빌드로 교체 권장 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="bg-gray-50">
+    <!-- TopBar -->
+    <header class="h-14 px-4 flex items-center justify-between border-b bg-white sticky top-0 z-10">
+        <div class="flex items-center gap-2">
+            <img src="{% static 'img/polytech.png' %}" alt="logo" class="w-8 h-8" />
+            <div class="font-semibold">Korea Polytechnics — 과제 제출</div>
+        </div>
+        <nav class="text-sm flex items-center gap-2">
+        {% if request.user.is_authenticated %}
+            <span class="text-gray-600">{{ request.user.username }}님</span>
+            <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="px-3 py-1 rounded hover:bg-gray-100">
+                로그아웃
+            </button>
+            </form>
+        {% else %}
+            <a href="{% url 'login' %}" class="px-3 py-1 rounded hover:bg-gray-100">로그인</a>
+        {% endif %}
+        </nav>
+        <nav class="flex items-center gap-3 text-sm">
+            <a href="{% url 'notifications' %}" class="px-3 py-1 rounded hover:bg-gray-100">알림</a>
+            <div class="w-8 h-8 rounded-full bg-gray-200"></div>
+        </nav>
+    </header>
+
+
+    <div class="flex">
+    <!-- SideBar -->
+        <aside class="w-64 p-3 border-r bg-white h-[calc(100vh-56px)] sticky top-14">
+            <div class="flex items-center gap-3 px-2 py-3">
+                <img src="{% static 'img/polytech.png' %}" alt="logo" class="w-10 h-10" />
+                <div>
+                    <div class="font-semibold leading-tight">KPU Submit</div>
+                    <div class="text-xs text-gray-500">AI Software Dept.</div>
+                </div>
+        </div>
+        <div class="mt-2 grid gap-1">
+            <a href="{% url 'dashboard' %}" class="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100 block">대시보드</a>
+            <a href="{% url 'assignments_list' %}" class="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100 block">과제 목록</a>
+            <a href="#" class="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100 block" onclick="return false;">과제 상세</a>
+            <a href="{% url 'submission_form' %}" class="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100 block">제출 작성</a>
+            <a href="{% url 'grading' %}" class="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100 block">채점 화면</a>
+            <a href="{% url 'notifications' %}" class="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100 block">알림센터</a>
+        </div>
+    </aside>
+
+
+    <!-- Main -->
+    <main class="flex-1 p-4">
+        {% block content %}{% endblock %}
+    </main>
+    </div>
+</body>
+</html>

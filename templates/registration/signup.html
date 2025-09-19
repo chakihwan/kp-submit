@@ -1,0 +1,59 @@
+{% load static %}
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <title>회원가입</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50 flex items-center justify-center">
+  <div class="w-full max-w-sm bg-white border rounded-2xl p-6 shadow-sm">
+    <div class="flex items-center gap-2 mb-4">
+      <img src="{% static 'img/polytech.png' %}" class="w-8 h-8" alt="logo">
+      <div class="font-semibold">Korea Polytechnics — 과제 제출</div>
+    </div>
+
+    {% if form.errors %}
+      <div class="text-sm text-red-600 mb-2">입력값을 다시 확인해 주세요.</div>
+    {% endif %}
+
+    <form method="post" action="{% url 'signup' %}">
+      {% csrf_token %}
+
+      <!-- 이름 -->
+      <label class="text-sm text-gray-600">이름</label>
+      <input type="text" name="full_name" value="{{ form.full_name.value|default:'' }}"
+             required class="w-full mt-1 mb-2 border rounded-xl px-3 py-2">
+
+      <!-- 아이디 (이메일 형식) -->
+      <label class="text-sm text-gray-600">아이디 (이메일)</label>
+      <input type="email" name="username" value="{{ form.username.value|default:'' }}"
+             required class="w-full mt-1 mb-2 border rounded-xl px-3 py-2">
+
+      <!-- 학번 -->
+      <label class="text-sm text-gray-600">학번</label>
+      <input type="text" name="student_id" value="{{ form.student_id.value|default:'' }}"
+             required class="w-full mt-1 mb-2 border rounded-xl px-3 py-2">
+
+      <!-- 비밀번호 -->
+      <label class="text-sm text-gray-600">비밀번호</label>
+      <input type="password" name="password1" required
+             class="w-full mt-1 mb-2 border rounded-xl px-3 py-2">
+
+      <!-- 비밀번호 확인 -->
+      <label class="text-sm text-gray-600">비밀번호 확인</label>
+      <input type="password" name="password2" required
+             class="w-full mt-1 mb-3 border rounded-xl px-3 py-2">
+
+      <button type="submit" class="w-full mt-2 px-4 py-2 rounded-xl bg-gray-900 text-white">
+        회원가입
+      </button>
+    </form>
+
+    <div class="text-sm text-gray-600 mt-4">
+      이미 계정이 있으신가요?
+      <a href="{% url 'login' %}" class="text-blue-600 underline">로그인</a>
+    </div>
+  </div>
+</body>
+</html>

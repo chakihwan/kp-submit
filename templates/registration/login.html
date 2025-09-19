@@ -1,0 +1,50 @@
+{% load static %}
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <title>로그인</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+
+  <div class="w-full max-w-sm bg-white border rounded-2xl p-6 shadow-sm">
+    <div class="flex items-center gap-2 mb-4">
+      <img src="{% static 'img/polytech.png' %}" class="w-8 h-8" alt="logo">
+      <div class="font-semibold">Korea Polytechnics — 과제 제출</div>
+    </div>
+
+    {% if form.errors %}
+      <p class="text-red-600 text-sm mb-2">아이디와 비밀번호를 확인하세요.</p>
+    {% endif %}
+
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      <div class="grid gap-3">
+        <div>
+          <label class="text-sm text-gray-600">아이디(이메일)</label>
+          <input type="text" name="username" autofocus required
+                 class="w-full mt-1 border rounded-xl px-3 py-2">
+        </div>
+        <div>
+          <label class="text-sm text-gray-600">비밀번호</label>
+          <input type="password" name="password" required
+                 class="w-full mt-1 border rounded-xl px-3 py-2">
+        </div>
+        <button type="submit" class="w-full mt-2 px-4 py-2 rounded-xl bg-gray-900 text-white">
+          로그인
+        </button>
+      </div>
+      {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="w-full max-w-sm text-center mt-3 text-sm text-gray-700">
+    계정이 없으신가요?
+    <a href="{% url 'signup' %}" class="text-blue-600 underline">회원가입</a>
+  </div>
+
+</body>
+</html>

@@ -19,6 +19,8 @@ from django.contrib import admin
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from submit import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -26,7 +28,7 @@ urlpatterns = [
     # 앱 뷰
     path("", views.dashboard, name="dashboard"),  # <- 반드시 루트에 연결!
     path("assignments/", views.assignments_list, name="assignments_list"),
-    path("submissions/new/", views.submission_form, name="submission_form"),
+    # path("submissions/new/", views.submission_form, name="submission_form"),
     path("grading/", views.grading, name="grading"),
     path("notifications/", views.notifications, name="notifications"),
 
@@ -34,4 +36,9 @@ urlpatterns = [
     path("accounts/login/",  auth_views.LoginView.as_view(template_name="registration/login.html"), name="login"),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("accounts/signup/", views.signup, name="signup"),  # 회원가입 
+
+    path("assignments/<int:pk>/", views.assignment_detail, name="assignment_detail"),
+    path("assignments/<int:assignment_id>/submit/", views.submission_form, name="submission_form"),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

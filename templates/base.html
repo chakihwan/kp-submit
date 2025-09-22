@@ -13,8 +13,8 @@
     <!-- TopBar -->
     <header class="h-14 px-4 flex items-center justify-between border-b bg-white sticky top-0 z-10">
         <div class="flex items-center gap-2">
-            <img src="{% static 'img/polytech.png' %}" alt="logo" class="w-8 h-8" />
-            <div class="font-semibold">Korea Polytechnics — 과제 제출</div>
+            <img src="{% static 'img/polytech.png' %}" alt="logo" class="h-[64px] w-auto" />
+            <div class="font-semibold">한국폴리텍대학 서울정수캠퍼스</div>
         </div>
         <nav class="text-sm flex items-center gap-2">
         {% if request.user.is_authenticated %}
@@ -40,18 +40,15 @@
     <!-- SideBar -->
         <aside class="w-64 p-3 border-r bg-white h-[calc(100vh-56px)] sticky top-14">
             <div class="flex items-center gap-3 px-2 py-3">
-                <img src="{% static 'img/polytech.png' %}" alt="logo" class="w-10 h-10" />
+                <img src="{% static 'img/polytech.png' %}" alt="logo" class="w-auto h-[50px]" />
                 <div>
-                    <div class="font-semibold leading-tight">KPU Submit</div>
-                    <div class="text-xs text-gray-500">AI Software Dept.</div>
+                    <div class="font-semibold leading-tight">한국폴리텍대학</div>
+                    <div class="text-xs text-gray-500">AI Software</div>
                 </div>
         </div>
         <div class="mt-2 grid gap-1">
             <a href="{% url 'dashboard' %}" class="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100 block">대시보드</a>
             <a href="{% url 'assignments_list' %}" class="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100 block">과제 목록</a>
-            <a href="#" class="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100 block" onclick="return false;">과제 상세</a>
-            <a href="{% url 'submission_form' %}" class="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100 block">제출 작성</a>
-            <a href="{% url 'grading' %}" class="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100 block">채점 화면</a>
             <a href="{% url 'notifications' %}" class="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-100 block">알림센터</a>
         </div>
     </aside>

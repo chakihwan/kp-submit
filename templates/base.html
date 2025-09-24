@@ -19,17 +19,20 @@
             </a>
         </div>
         <nav class="text-sm flex items-center gap-2">
-        {% if request.user.is_authenticated %}
-            <span class="text-gray-600">{{ request.user.username }}님</span>
-            <form method="post" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="px-3 py-1 rounded hover:bg-gray-100">
-                로그아웃
-            </button>
-            </form>
-        {% else %}
-            <a href="{% url 'login' %}" class="px-3 py-1 rounded hover:bg-gray-100">로그인</a>
-        {% endif %}
+            {% if request.user.is_authenticated %}
+                <span class="text-gray-600">{{ request.user.username }}님</span>
+
+                {% if request.user.is_authenticated and request.user.is_staff %}
+                <a href="{% url 'teacher_dashboard' %}" class="px-3 py-1 rounded hover:bg-gray-100">교수자 대시보드</a>
+                {% endif %}
+
+                <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="px-3 py-1 rounded hover:bg-gray-100">로그아웃</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="px-3 py-1 rounded hover:bg-gray-100">로그인</a>
+            {% endif %}
         </nav>
         <nav class="flex items-center gap-3 text-sm">
             <a href="{% url 'notifications' %}" class="px-3 py-1 rounded hover:bg-gray-100">알림</a>

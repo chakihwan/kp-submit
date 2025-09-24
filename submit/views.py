@@ -1,15 +1,16 @@
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.contrib.auth.models import User
-from .models import StudentProfile,Course, Assignment, Submission, SubmissionFile
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.db import transaction
+
+from .models import StudentProfile,Course, Assignment, Submission, SubmissionFile
 
 # --- 회원가입 폼 (이메일 필수 + 중복 체크) ---
 class SignupForm(UserCreationForm):
@@ -195,3 +196,59 @@ def cancel_submission(request, assignment_id):
 
     messages.success(request, "제출을 취소하고 첨부 파일을 모두 삭제했습니다.")
     return redirect("assignment_detail", pk=a.pk)
+
+def is_teacher(user):
+    return user.is_authenticated and (user.is_staff or user.groups.filter(name="teacher").exists())
+
+from functools import wraps
+def teacher_required(view_func):
+    @wraps(view_func)
+    def _wrapped(*args, **kwargs):
+        return login_required(user_passes_test(is_teacher)(view_func))(*args, **kwargs)
+    return _wrapped
+
+# ── 교수자 대시보드 ───────────────────────────────────────────
+@teacher_required
+def teacher_dashboard(request):
+    courses = Course.objects.filter(teacher=request.user).order_by("code")
+    # 최근 과제 5개
+    recent_assignments = Assignment.objects.filter(course__teacher=request.user).select_related("course").order_by("-created_at")[:5]
+    return render(request, "teacher/dashboard.html", {
+        "courses": courses,
+        "recent_assignments": recent_assignments,
+    })
+
+# ── 과제 생성 폼 ──────────────────────────────────────────────
+class AssignmentForm(forms.ModelForm):
+    class Meta:
+        model = Assignment
+        fields = ("course", "title", "description", "due_at", "max_score", "late_policy", "file_rules")
+        widgets = {
+            "due_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        # 현재 교수자가 담당하는 과목만 선택 가능
+        if user:
+            self.fields["course"].queryset = Course.objects.filter(teacher=user)
+
+@teacher_required
+def teacher_assignment_create(request):
+    if request.method == "POST":
+        form = AssignmentForm(request.POST, user=request.user)
+        if form.is_valid():
+            a = form.save()
+            messages.success(request, "과제가 생성되었습니다.")
+            return redirect("teacher_dashboard")
+    else:
+        form = AssignmentForm(user=request.user)
+    return render(request, "teacher/assignment_form.html", {"form": form})
+
+# ── 특정 과제의 제출 목록(학생별) ─────────────────────────────
+@teacher_required
+def teacher_submissions(request, pk):
+    a = get_object_or_404(Assignment.objects.select_related("course"), pk=pk, course__teacher=request.user)
+    subs = Submission.objects.filter(assignment=a).select_related("student").prefetch_related("files").order_by("-submitted_at")
+    return render(request, "teacher/submissions_list.html", {"a": a, "submissions": subs})

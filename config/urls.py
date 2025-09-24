@@ -25,13 +25,18 @@ from django.conf.urls.static import static
 urlpatterns = [
     path("admin/", admin.site.urls),
 
-    # 앱 뷰
+    # 학생/공용
     path("", views.dashboard, name="dashboard"),  # <- 반드시 루트에 연결!
     path("assignments/", views.assignments_list, name="assignments_list"),
     # path("submissions/new/", views.submission_form, name="submission_form"),
     path("grading/", views.grading, name="grading"),
     path("notifications/", views.notifications, name="notifications"),
 
+     # 교수자 전용
+    path("teacher/dashboard/", views.teacher_dashboard, name="teacher_dashboard"),
+    path("teacher/assignments/new/", views.teacher_assignment_create, name="teacher_assignment_create"),
+    path("teacher/assignments/<int:pk>/submissions/", views.teacher_submissions, name="teacher_submissions"),
+    
     # 인증
     path("accounts/login/",  auth_views.LoginView.as_view(template_name="registration/login.html"), name="login"),
     path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),

@@ -39,6 +39,9 @@ urlpatterns = [
 
     path("assignments/<int:pk>/", views.assignment_detail, name="assignment_detail"),
     path("assignments/<int:assignment_id>/submit/", views.submission_form, name="submission_form"),
+    path("assignments/<int:assignment_id>/files/<int:file_id>/delete/", 
+     views.submission_file_delete, name="submission_file_delete"),
+
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

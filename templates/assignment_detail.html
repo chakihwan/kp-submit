@@ -18,35 +18,23 @@
     </p>
   </div>
 
-  <!-- 하단: 제출 현황 -->
-  <div class="rounded-2xl border bg-white p-4 shadow-sm">
-    <div class="font-semibold mb-2">제출 현황</div>
-    <div class="overflow-auto rounded-xl border">
-      <table class="min-w-full text-sm">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-3 py-2">학생</th>
-            <th class="px-3 py-2">상태</th>
-            <th class="px-3 py-2">시간</th>
-            <th class="px-3 py-2">점수</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="border-t">
-            <td class="px-3 py-2">홍길동</td>
-            <td class="px-3 py-2 text-green-700">제출</td>
-            <td class="px-3 py-2">오늘 13:20</td>
-            <td class="px-3 py-2">-</td>
-          </tr>
-          <tr class="border-t">
-            <td class="px-3 py-2">김철수</td>
-            <td class="px-3 py-2">미제출</td>
-            <td class="px-3 py-2">-</td>
-            <td class="px-3 py-2">-</td>
-          </tr>
-        </tbody>
-      </table>
+  {% if user_submission %}
+    <div class="rounded-2xl border bg-white p-4 shadow-sm">
+      <div class="font-semibold mb-2">내 제출 상태</div>
+      <p class="text-sm">상태: {{ user_submission.get_status_display }}{% if user_submission.submitted_at %} · 시간: {{ user_submission.submitted_at }}{% endif %}</p>
+      {% if user_submission.files.all %}
+        <div class="mt-2 text-sm">
+          파일:
+          {% for f in user_submission.files.all %}
+            <a class="underline text-blue-600" href="{{ f.file.url }}">v{{ f.version }}</a>{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+      <div class="mt-3">
+        <a href="{% url 'submission_form' assignment_id=a.id %}" class="px-3 py-1 rounded bg-gray-900 text-white text-sm">
+          재제출 / 수정
+        </a>
+      </div>
     </div>
-  </div>
-</div>
+  {% endif %}
 {% endblock %}

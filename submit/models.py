@@ -61,18 +61,16 @@ class Assignment(models.Model):
 
 class Submission(models.Model):
     STATUS = (
-        ("draft", "작성중"),
+        ("not_submitted", "미제출"),
+        ("late", "지연제출"),
         ("submitted", "제출됨"),
         ("graded", "채점완료"),
     )
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, verbose_name="과제")
     student = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="학생")
-    status = models.CharField("상태", max_length=10, choices=STATUS, default="draft")
+    status = models.CharField("상태", max_length=20, choices=STATUS, default="not_submitted")
     comment = models.TextField("제출 메모", blank=True)
     submitted_at = models.DateTimeField("제출일시", null=True, blank=True)
-
-    def __str__(self): return f"{self.assignment.title} - {self.student.username}"
-
     class Meta:
         verbose_name = "제출"
         verbose_name_plural = "제출"

@@ -15,7 +15,7 @@
           <th class="px-3 py-2">과목</th>
           <th class="px-3 py-2">마감</th>
           <th class="px-3 py-2">상태</th>
-          <th class="px-3 py-2">열기</th>
+          <th class="px-3 py-2"></th>
         </tr>
       </thead>
       <tbody>
@@ -24,7 +24,18 @@
           <td class="px-3 py-2">{{ a.title }}</td>
           <td class="px-3 py-2">{{ a.course.title }}</td>
           <td class="px-3 py-2">{{ a.due_at }}</td>
-          <td class="px-3 py-2">{{ a.status|default:'-' }}</td>
+          <td class="px-3 py-2">
+            {% if a.user_submission %}
+              {{ a.user_submission.get_status_display }}
+              {% if a.user_submission.submitted_at %}
+                <div class="text-xs text-gray-500">
+                  {{ a.user_submission.submitted_at }}
+                </div>
+              {% endif %}
+            {% else %}
+              미제출
+            {% endif %}
+          </td>
           <td class="px-3 py-2">
             <a href="{% url 'assignment_detail' a.id %}" class="px-2 py-1 text-xs rounded bg-gray-900 text-white">열기</a>
           </td>

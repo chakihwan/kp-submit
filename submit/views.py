@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from .models import StudentProfile,Course, Assignment, Submission, SubmissionFile
 from django.views.decorators.http import require_POST
 from django.utils import timezone
+from django.db import transaction
 
 # --- 회원가입 폼 (이메일 필수 + 중복 체크) ---
 class SignupForm(UserCreationForm):
@@ -71,8 +72,18 @@ def dashboard(request):
 
 @login_required
 def assignments_list(request):
-    qs = Assignment.objects.select_related("course").order_by("-created_at")
-    return render(request, "assignments_list.html", {"assignments": qs})
+    assignments = list(
+        Assignment.objects.select_related("course").order_by("-created_at")
+    )
+    subs = Submission.objects.filter(
+        student=request.user, assignment__in=assignments
+    ).select_related("assignment")
+
+    sub_by_aid = {s.assignment_id: s for s in subs}
+    for a in assignments:
+        a.user_submission = sub_by_aid.get(a.id)  # ← 템플릿에서 a.user_submission 로 접근
+
+    return render(request, "assignments_list.html", {"assignments": assignments})
 
 @login_required
 def assignment_detail(request, pk):
@@ -108,27 +119,21 @@ def submission_form(request, assignment_id):
     sub, _ = Submission.objects.get_or_create(assignment=a, student=request.user)
 
     if request.method == "POST":
-        # POST에서는 instance=sub 을 바인딩해 저장
         form = SubmissionFormForm(request.POST, request.FILES, instance=sub)
         if form.is_valid():
             sub = form.save(commit=False)
-            sub.status = "submitted"
-            sub.submitted_at = timezone.now()
+            now = timezone.now()
+            sub.submitted_at = now
+            sub.status = "late" if (a.due_at and now > a.due_at) else "submitted"
             sub.save()
-
+            # 파일 저장 로직 그대로…
             up = request.FILES["file"]
             SubmissionFile.objects.create(
-                submission=sub,
-                file=up,
-                version=sub.files.count() + 1,
-                size=up.size,
+                submission=sub, file=up, version=sub.files.count()+1, size=up.size
             )
             messages.success(request, "제출이 완료되었습니다.")
-            # ✅ 제출 후 상세로 이동(폼 재방문 시 메모가 비어 있도록 GET에서 별도 처리함)
             return redirect("assignment_detail", pk=a.pk)
     else:
-        # ✅ GET에서는 코멘트가 남아 보이지 않도록 initial로 빈 값 강제
-        #    (instance=sub을 주더라도 initial이 화면 표시를 우선함)
         form = SubmissionFormForm(instance=sub, initial={"comment": ""})
 
     return render(request, "submission_form.html", {"form": form, "a": a, "sub": sub})
@@ -157,3 +162,36 @@ def submission_file_delete(request, assignment_id, file_id):
         messages.error(request, "잘못된 요청입니다.")
 
     return redirect("submission_form", assignment_id=a.pk)
+
+# ── 제출 취소 ─────────────────────────────────────────
+@require_POST
+@login_required
+@transaction.atomic
+def cancel_submission(request, assignment_id):
+    a = get_object_or_404(Assignment, pk=assignment_id)
+    sub = get_object_or_404(Submission, assignment=a, student=request.user)
+
+    # (정책) 채점완료는 취소 불가로 유지
+    if sub.status == "graded":
+        messages.error(request, "채점완료 상태는 제출 취소가 불가합니다.")
+        return redirect("assignment_detail", pk=a.pk)
+
+    # 1) 업로드 파일 실제 스토리지에서 삭제
+    files = list(sub.files.all())
+    for f in files:
+        try:
+            # 실제 파일(디스크/스토리지) 삭제
+            f.file.delete(save=False)
+        except Exception:
+            pass  # 파일이 이미 없거나 오류여도 트랜잭션 유지
+
+    # 2) 파일 레코드 삭제
+    sub.files.all().delete()
+
+    # 3) 제출 상태/시간 초기화 (미제출)
+    sub.status = "not_submitted"
+    sub.submitted_at = None
+    sub.save(update_fields=["status", "submitted_at"])
+
+    messages.success(request, "제출을 취소하고 첨부 파일을 모두 삭제했습니다.")
+    return redirect("assignment_detail", pk=a.pk)

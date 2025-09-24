@@ -40,7 +40,12 @@ urlpatterns = [
     path("assignments/<int:pk>/", views.assignment_detail, name="assignment_detail"),
     path("assignments/<int:assignment_id>/submit/", views.submission_form, name="submission_form"),
     path("assignments/<int:assignment_id>/files/<int:file_id>/delete/", 
-     views.submission_file_delete, name="submission_file_delete"),
+        views.submission_file_delete, name="submission_file_delete"),
+    path(
+        "assignments/<int:assignment_id>/cancel-submission/",
+        views.cancel_submission,
+        name="cancel_submission",
+    ),
 
 ]
 

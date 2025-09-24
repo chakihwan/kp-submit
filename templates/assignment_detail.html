@@ -18,23 +18,36 @@
     </p>
   </div>
 
-  {% if user_submission %}
-    <div class="rounded-2xl border bg-white p-4 shadow-sm">
-      <div class="font-semibold mb-2">내 제출 상태</div>
-      <p class="text-sm">상태: {{ user_submission.get_status_display }}{% if user_submission.submitted_at %} · 시간: {{ user_submission.submitted_at }}{% endif %}</p>
-      {% if user_submission.files.all %}
-        <div class="mt-2 text-sm">
-          파일:
-          {% for f in user_submission.files.all %}
-            <a class="underline text-blue-600" href="{{ f.file.url }}">v{{ f.version }}</a>{% if not forloop.last %}, {% endif %}
-          {% endfor %}
-        </div>
-      {% endif %}
-      <div class="mt-3">
-        <a href="{% url 'submission_form' assignment_id=a.id %}" class="px-3 py-1 rounded bg-gray-900 text-white text-sm">
-          재제출 / 수정
-        </a>
+{% if user_submission %}
+  <div class="rounded-2xl border bg-white p-4 shadow-sm">
+    <div class="font-semibold mb-2">내 제출 상태</div>
+    <p class="text-sm">
+      상태: {{ user_submission.get_status_display }}
+      {% if user_submission.submitted_at %} · 시간: {{ user_submission.submitted_at|date:"Y-m-d H:i" }}{% endif %}
+    </p>
+
+    {% if user_submission.files.all %}
+      <div class="mt-2 text-sm">
+        파일:
+        {% for f in user_submission.files.all %}
+          <a class="underline text-blue-600" href="{{ f.file.url }}">v{{ f.version }}</a>{% if not forloop.last %}, {% endif %}
+        {% endfor %}
       </div>
+    {% endif %}
+
+    <div class="mt-3 flex items-center gap-2">
+      <a href="{% url 'submission_form' assignment_id=a.id %}"
+         class="px-3 py-1 rounded bg-gray-900 text-white text-sm">재제출 / 수정</a>
+
+      {% if user_submission and user_submission.status in "submitted,late" %}
+      <form method="post" action="{% url 'cancel_submission' assignment_id=a.id %}"
+            onsubmit="return confirm('제출을 취소할까요?');">
+        {% csrf_token %}
+        <button type="submit" class="px-3 py-1 rounded bg-gray-200 text-sm">제출 취소</button>
+      </form>
+      {% endif %}
     </div>
-  {% endif %}
+  </div>
+{% endif %}
+
 {% endblock %}

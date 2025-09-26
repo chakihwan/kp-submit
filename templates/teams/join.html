@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}팀 참가하기{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto grid gap-6">
+  <div class="rounded-2xl border bg-white p-6 shadow-sm">
+    <h1 class="text-lg font-semibold mb-3">팀 코드로 참가 요청</h1>
+    <form method="post" action="{% url 'team_request_by_code' %}" class="flex gap-2">
+      {% csrf_token %}
+      <input name="join_code" required maxlength="6" class="border rounded-xl px-3 py-2" placeholder="6자리 코드">
+      <button class="px-4 py-2 rounded-xl bg-blue-600 text-white">요청 보내기</button>
+    </form>
+  </div>
+
+  <div class="rounded-2xl border bg-white p-6 shadow-sm">
+    <h2 class="text-lg font-semibold mb-3">내 참가 요청</h2>
+    {% if my_requests %}
+      <div class="divide-y">
+        {% for m in my_requests %}
+        <div class="py-3 flex items-center justify-between">
+          <div>
+            <div class="font-semibold">{{ m.team.name }}</div>
+            <div class="text-sm text-gray-600">
+              상태: {{ m.get_status_display }} · 요청일시: {{ m.requested_at|date:"Y-m-d H:i" }}
+              {% if m.decided_at %} · 결정: {{ m.decided_at|date:"Y-m-d H:i" }}{% endif %}
+            </div>
+          </div>
+          <div>
+            {% if m.status == "APPROVED" %}
+              <a href="{% url 'team_detail' team_id=m.team.id %}"
+                 class="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50">
+                팀으로 가기
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-sm text-gray-600">보낸 참가 요청이 없습니다.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

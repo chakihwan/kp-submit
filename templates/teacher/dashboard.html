@@ -7,19 +7,29 @@
       <div class="font-semibold">담당 과목</div>
       <a href="{% url 'teacher_assignment_create' %}" class="px-3 py-1 rounded bg-gray-900 text-white text-sm">새 과제 만들기</a>
     </div>
-    <div class="mt-3 grid gap-2">
-      {% for c in courses %}
+
+    <!-- 과목 리스트 + 팀 관리/생성 버튼 -->
+    <div class="mt-3 space-y-2">
+    {% for c in courses %}
         <div class="flex items-center justify-between border rounded-xl p-3">
-          <div>
-            <div class="font-medium">{{ c.code }} {{ c.title }}</div>
-            <div class="text-xs text-gray-500">담당: {{ c.teacher.username }}</div>
-          </div>
+        <div>
+            <div class="font-medium">{{ c.title }}</div>
+            <div class="text-sm text-gray-500">{{ c.code }}</div>
         </div>
-      {% empty %}
-        <div class="text-sm text-gray-500">담당 과목이 없습니다.</div>
-      {% endfor %}
+
+        <div class="flex gap-2">
+            <!-- ✅ c는 Course 객체이므로 c.id 사용 -->
+            <a href="{% url 'course_teams' course_id=c.id %}" class="px-3 py-1 rounded border">팀 관리</a>
+
+            {% if request.user == c.teacher or request.user.id == c.teacher_id %}
+            <a href="{% url 'create_team' course_id=c.id %}" class="px-3 py-1 rounded bg-blue-600 text-white">팀 만들기</a>
+            {% endif %}
+        </div>
+        </div>
+    {% empty %}
+        <div class="text-gray-500">담당 과목이 없습니다.</div>
+    {% endfor %}
     </div>
-  </div>
 
   <div class="rounded-2xl border bg-white p-4 shadow-sm">
     <div class="font-semibold mb-2">최근 과제</div>

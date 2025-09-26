@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}팀 삭제{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto rounded-2xl border bg-white p-6 shadow-sm">
+  <h1 class="text-xl font-semibold text-red-600">팀 삭제</h1>
+  <p class="mt-2 text-sm text-gray-700">
+    <strong>{{ team.name }}</strong> 팀을 삭제하시겠습니까?<br>
+    이 동작은 되돌릴 수 없으며, 팀에 속한 데이터가 모두 삭제됩니다.
+  </p>
+  <ul class="mt-3 text-sm text-gray-600 list-disc pl-5">
+    <li>과제 {{ assignment_cnt }}개</li>
+    <li>팀 멤버십 {{ member_cnt }}건</li>
+    <li>제출/파일/성적 등 연결 데이터</li>
+  </ul>
+
+  <form method="post" class="mt-5 flex items-center gap-2">
+    {% csrf_token %}
+    <button type="submit"
+            class="px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-red-500">
+      네, 삭제합니다
+    </button>
+    <a href="{% url 'team_detail' team_id=team.id %}"
+       class="px-4 py-2 rounded-xl border hover:bg-gray-50">
+      취소
+    </a>
+  </form>
+</div>
+{% endblock %}

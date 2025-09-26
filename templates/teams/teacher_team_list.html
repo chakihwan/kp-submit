@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}팀 홈{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-3">
+  <h1 class="text-xl font-semibold">내 팀</h1>
+  <a href="{% url 'create_team' %}" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-500">
+    팀 만들기
+  </a>
+</div>
+
+{% if teams %}
+  <div class="grid md:grid-cols-2 gap-3">
+    {% for t in teams %}
+      <a href="{% url 'team_detail' team_id=t.id %}" class="rounded-2xl border bg-white p-4 shadow-sm hover:bg-gray-50 transition">
+        <div class="flex items-center justify-between">
+          <div class="font-semibold">{{ t.name }}</div>
+          {% if t.owner_id == request.user.id %}
+            <span class="text-xs px-2 py-0.5 rounded bg-gray-800 text-white">내가 만든 팀</span>
+          {% endif %}
+        </div>
+        {% if t.description %}
+          <div class="text-sm text-gray-600 mt-1 line-clamp-2">{{ t.description }}</div>
+        {% endif %}
+        <div class="text-xs text-gray-500 mt-2">코드: {{ t.join_code }}</div>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="text-sm text-gray-600">아직 표시할 팀이 없습니다.</p>
+{% endif %}
+{% endblock %}

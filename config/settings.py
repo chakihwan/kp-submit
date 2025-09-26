@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-78*7s0$wh_b@veebkpcdk4_3d#)^t%ai-oh#wbcw3h58bjiy=b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "192.168.24.186"]
 
 
 # Application definition
@@ -124,9 +124,13 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-LOGIN_URL = "login"                  # 인증 필요시 보내줄 URL name
-LOGIN_REDIRECT_URL = "dashboard"     # 로그인 성공 후 이동
-LOGOUT_REDIRECT_URL = "login"        # 로그아웃 후 이동
+# LOGIN_URL = "login"                  # 인증 필요시 보내줄 URL name
+# LOGIN_REDIRECT_URL = "dashboard"     # 로그인 성공 후 이동
+# LOGOUT_REDIRECT_URL = "login"        # 로그아웃 후 이동
+
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "teacher_team_list"  # 로그인 후 팀 가입 페이지로 이동
+LOGOUT_REDIRECT_URL = "login"  # 있어도 무방(우리는 뷰에서 redirect 처리함)
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"

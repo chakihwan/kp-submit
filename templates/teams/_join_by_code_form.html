@@ -1,0 +1,11 @@
+<form method="post" action="{% url 'team_request_by_code' %}" class="max-w-md">
+  {% csrf_token %}
+  <label class="block mb-1 font-semibold">팀코드(6자리)</label>
+  <div class="flex gap-2">
+    <input name="join_code" maxlength="6" pattern="\\d{6}" required
+           class="flex-1 border p-2 rounded font-mono tracking-widest"
+           placeholder="예: 483920">
+    <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white">가입요청</button>
+  </div>
+  <p class="text-sm text-gray-500 mt-1">코드를 입력하면 교수 승인 후 ‘팀 참가’ 버튼이 활성화됩니다.</p>
+</form>

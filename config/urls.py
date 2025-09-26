@@ -17,41 +17,46 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from django.contrib.auth import views as auth_views
 from submit import views
-from django.conf import settings
-from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path('admin/', admin.site.urls),
+    path('', views.teacher_team_list, name='root'), 
 
-    # 학생/공용
-    path("", views.dashboard, name="dashboard"),  # <- 반드시 루트에 연결!
-    path("assignments/", views.assignments_list, name="assignments_list"),
-    # path("submissions/new/", views.submission_form, name="submission_form"),
-    path("grading/", views.grading, name="grading"),
-    path("notifications/", views.notifications, name="notifications"),
-
-     # 교수자 전용
-    path("teacher/dashboard/", views.teacher_dashboard, name="teacher_dashboard"),
-    path("teacher/assignments/new/", views.teacher_assignment_create, name="teacher_assignment_create"),
-    path("teacher/assignments/<int:pk>/submissions/", views.teacher_submissions, name="teacher_submissions"),
-    
     # 인증
-    path("accounts/login/",  auth_views.LoginView.as_view(template_name="registration/login.html"), name="login"),
-    path("accounts/logout/", auth_views.LogoutView.as_view(), name="logout"),
-    path("accounts/signup/", views.signup, name="signup"),  # 회원가입 
+    path('accounts/login/', views.MyLoginView.as_view(), name='login'),
+    path('accounts/logout/', views.logout_view, name='logout'),
+    path('accounts/signup/', views.signup, name='signup'),
 
-    path("assignments/<int:pk>/", views.assignment_detail, name="assignment_detail"),
-    path("assignments/<int:assignment_id>/submit/", views.submission_form, name="submission_form"),
-    path("assignments/<int:assignment_id>/files/<int:file_id>/delete/", 
-        views.submission_file_delete, name="submission_file_delete"),
-    path(
-        "assignments/<int:assignment_id>/cancel-submission/",
-        views.cancel_submission,
-        name="cancel_submission",
-    ),
+    # 팀
+    path('teams', views.teacher_team_list, name='teacher_team_list'),
+    path('teams/create', views.create_team, name='create_team'),
+    path('teams/join', views.join_page, name='team_join_page'),
+    path('teams/<int:team_id>', views.team_detail, name='team_detail'),
+    path('teams/<int:team_id>/regen_code', views.regen_team_code, name='regen_team_code'),
+    path('teams/<int:team_id>/requests', views.list_team_requests, name='team_request_list'),
+    path('teams/requests/<int:membership_id>/approve', views.approve_team_request, name='team_request_approve'),
+    path('teams/requests/<int:membership_id>/reject', views.reject_team_request, name='team_request_reject'),
+    path('teams/request_by_code', views.request_join_by_code, name='team_request_by_code'),
+    path('teams/<int:team_id>/join', views.join_team, name='team_join'),
+    path('teams/<int:team_id>/delete', views.team_delete, name='team_delete'),
+    
+    #  과제: 생성/상세/제출/제출목록
+    path('teams/<int:team_id>/assignments/create', views.assignment_create, name='assignment_create'),
+    path('teams/<int:team_id>/assignments/<int:assignment_id>', views.assignment_detail, name='assignment_detail'),
+    path('teams/<int:team_id>/assignments/<int:assignment_id>/submit', views.assignment_submit, name='assignment_submit'),
+    path('teams/<int:team_id>/assignments/<int:assignment_id>/submissions', views.assignment_submissions, name='assignment_submissions'),
+    path("teams/<int:team_id>/assignments/", views.assignment_list, name="assignment_list"),
 
+
+    # 채점 (단일 제출 채점 페이지)
+    path('teams/<int:team_id>/assignments/<int:assignment_id>/grade/<int:submission_id>',
+        views.grade_submission, name='grade_submission'),
+
+    # 과제 마감/해제
+    path('teams/<int:team_id>/assignments/<int:assignment_id>/close',
+        views.assignment_close, name='assignment_close'),
+    path('teams/<int:team_id>/assignments/<int:assignment_id>/reopen',
+        views.assignment_reopen, name='assignment_reopen'),
 ]
-
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

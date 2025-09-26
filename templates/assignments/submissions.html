@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}제출 현황{% endblock %}
+{% block content %}
+<div class="rounded-2xl border bg-white p-6 shadow-sm">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-semibold">제출 현황 – {{ a.title }}</h1>
+      <div class="text-sm text-gray-600">마감: {{ a.due_at|date:"Y-m-d H:i" }}</div>
+    </div>
+    <a class="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50"
+       href="{% url 'assignment_detail' team_id=team.id assignment_id=a.id %}">
+      과제로 돌아가기
+    </a>
+  </div>
+
+  <div class="mt-4 overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-3 py-2 text-left">학생</th>
+          <th class="px-3 py-2 text-left">상태</th>
+          <th class="px-3 py-2 text-left">제출시각</th>
+          <th class="px-3 py-2 text-left">파일(버전)</th>
+          <th class="px-3 py-2 text-left">점수</th>
+          <th class="px-3 py-2 text-left">관리</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in subs %}
+        <tr class="border-t">
+          <td class="px-3 py-2">{{ s.student.username }}</td>
+          <td class="px-3 py-2">{{ s.get_status_display|default:s.status }}</td>
+          <td class="px-3 py-2">{{ s.submitted_at|date:"Y-m-d H:i" }}</td>
+          <td class="px-3 py-2">
+            {% for f in s.files.all %}
+              <a class="underline text-blue-600" href="{{ f.file.url }}" download>v{{ f.version }}</a>
+              {% if not forloop.last %}, {% endif %}
+            {% empty %}
+              -
+            {% endfor %}
+          </td>
+          <td class="px-3 py-2">
+            {% if s.grade %}
+              {{ s.grade.score }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td class="px-3 py-2">
+            {% if not s.grade %}
+              <a class="px-2 py-1 rounded border text-xs hover:bg-gray-50"
+                href="{% url 'grade_submission' team_id=team.id assignment_id=a.id submission_id=s.id %}">
+                채점하기
+              </a>
+            {% else %}
+              <span class="text-gray-500">채점완료</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td class="px-3 py-4 text-gray-500" colspan="6">제출 없음</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

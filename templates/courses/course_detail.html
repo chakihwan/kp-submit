@@ -1,0 +1,6 @@
+{% if request.user == course.teacher %}
+  <div class="mb-3 flex gap-2">
+    <a href="{% url 'course_teams' course_id=course.id %}" class="px-3 py-1 rounded border">팀 관리</a>
+    <a href="{% url 'create_team' course_id=course.id %}" class="px-3 py-1 rounded bg-blue-600 text-white">팀 만들기</a>
+  </div>
+{% endif %}

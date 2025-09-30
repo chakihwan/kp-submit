@@ -14,6 +14,7 @@ from django.db.models import Q, Count
 from django.utils.dateparse import parse_datetime
 from django.db import transaction
 from django.db import IntegrityError
+import datetime
 
 from .models import (
     Team, TeamMembership,
@@ -98,24 +99,22 @@ def teacher_team_list(request):
     )
     return render(request, "teams/teacher_team_list.html", {"teams": teams})
 
-# ===== 교수: 팀 생성 =====
+# ===== 팀 생성 =====
 @login_required
 def create_team(request):
     if request.method == "POST":
         name = (request.POST.get("name") or "").strip()
         desc = (request.POST.get("description") or "").strip()
         if not name:
-            # 필요시 메시지 대신 그냥 리다이렉트
-            return redirect("create_team")
+            # 파일명도 create_team.html 로 맞춤
+            return render(request, "teams/create_team.html", {"error": "팀명을 입력하세요."})
 
         t = Team(owner=request.user, name=name, description=desc)
-        t.save()  # join_code는 모델에서 자동 생성
+        t.save()
         return redirect("team_detail", team_id=t.id)
 
-    return render(request, "teams/create.html")
-
-    # GET: 팀 생성 폼
-    return render(request, "teams/create_team.html", {})
+    # ← GET 렌더도 파일명 통일
+    return render(request, "teams/create_team.html")
 
 # ===== 학생: 팀 코드로 가입 페이지 =====
 # 팀 참가(코드 입력 화면 + 내 요청 목록)
@@ -305,49 +304,56 @@ def team_delete(request, team_id):
 def assignment_create(request, team_id):
     team = get_object_or_404(Team, pk=team_id)
     if request.user != team.owner:
-        return HttpResponseForbidden("팀장만 과제를 등록할 수 있습니다.")
+        return HttpResponseForbidden("권한이 없습니다.")
 
     if request.method == "POST":
-        title = request.POST.get("title", "").strip()
-        desc = request.POST.get("description", "").strip()
-        due_raw = request.POST.get("due_at", "").strip()  # e.g. "2025-10-10T23:59"
-        max_score = int(request.POST.get("max_score", "100") or 100)
+        title = (request.POST.get("title") or "").strip()
+        description = (request.POST.get("description") or "").strip()
+        max_score = int(request.POST.get("max_score") or 100)
 
-        if not title or not due_raw:
-            messages.error(request, "제목과 마감일시는 필수입니다.")
-            return redirect('assignment_create', team_id=team.id)
+        due_raw = (request.POST.get("due_at") or "").strip()  # ex) "2025-10-01T23:59"
+        if not due_raw:
+            return render(request, "assignments/create.html", {
+                "team": team,
+                "error": "마감일시는 필수입니다.",
+                "default_due": timezone.now() + datetime.timedelta(days=7),
+            })
 
+        # ✅ datetime-local 포맷 파싱
         try:
-            # 1) 문자열 → naive datetime
-            due_naive = datetime.strptime(due_raw, "%Y-%m-%dT%H:%M")
-            # 2) settings.TIME_ZONE 기준 aware
-            due_dt = timezone.make_aware(due_naive, timezone.get_current_timezone())
-        except Exception:
-            messages.error(request, "마감일시는 날짜 선택기를 이용해 정확히 입력하세요.")
-            return redirect('assignment_create', team_id=team.id)
+            # Python 3.11+: fromisoformat은 "YYYY-MM-DDTHH:MM" 지원
+            due_dt = datetime.datetime.fromisoformat(due_raw)
+        except ValueError:
+            # 공백/다른 포맷으로 오는 경우 보정
+            try:
+                due_dt = datetime.datetime.strptime(due_raw.replace(" ", "T"), "%Y-%m-%dT%H:%M")
+            except ValueError:
+                return render(request, "assignments/create.html", {
+                    "team": team,
+                    "error": "마감일시는 날짜 선택기를 이용해 정확히 입력하세요.",
+                    "default_due": timezone.now() + datetime.timedelta(days=7),
+                })
+
+        # ✅ timezone-aware 로 변환 (서버 TZ 기준)
+        if timezone.is_naive(due_dt):
+            due_dt = timezone.make_aware(due_dt, timezone.get_current_timezone())
 
         a = Assignment.objects.create(
             team=team,
             title=title,
-            description=desc,
+            description=description,
             due_at=due_dt,
             max_score=max_score,
+            created_by=request.user,  # 필드가 있으면 세팅, 없으면 제거
         )
-        messages.success(request, f"과제 '{a.title}'를 생성했습니다.")
-        return redirect('team_detail', team_id=team.id)
+        return redirect("assignment_detail", team_id=team.id, assignment_id=a.id)
 
-    # GET: 기본값(지금 시각과 +7일 23:59)을 템플릿으로
-    now_local = timezone.localtime()  # Asia/Seoul
-    # 기본 마감은 7일 뒤 23:59
-    default_due = (now_local + timezone.timedelta(days=7)).replace(hour=23, minute=59, second=0, microsecond=0)
-
-    # datetime-local 형식으로 포맷: YYYY-MM-DDTHH:MM
-    ctx = {
+    # GET: 기본값(일주일 뒤 23:59 등)
+    default_due = timezone.localtime(timezone.now() + datetime.timedelta(days=7)).replace(second=0, microsecond=0)
+    return render(request, "assignments/create.html", {
         "team": team,
-        "now_local": now_local.strftime("%Y-%m-%dT%H:%M"),
-        "default_due": default_due.strftime("%Y-%m-%dT%H:%M"),
-    }
-    return render(request, 'assignments/create.html', ctx)
+        "default_due": default_due,
+    })
 
 
 @login_required

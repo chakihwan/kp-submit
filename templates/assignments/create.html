@@ -16,10 +16,9 @@
     <div>
     <label class="block text-sm text-gray-700 mb-1">마감일시</label>
     <input type="datetime-local" name="due_at" required
-            class="w-full border rounded-xl px-3 py-2"
-            value="{{ default_due|default:'' }}"
-            min="{{ now_local|default:'' }}">
-    <p class="text-xs text-gray-500 mt-1">예: 2025-10-10 23:59</p>
+        value="{{ default_due|date:'Y-m-d\\TH:i' }}"
+        class="w-full border rounded-xl px-3 py-2" />
+    <p class="text-xs text-gray-500 mt-1">예: 2025-10-01 23:59</p>
     </div>
     <div>
       <label class="block text-sm text-gray-700 mb-1">배점</label>

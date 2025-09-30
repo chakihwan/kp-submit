@@ -2,11 +2,22 @@
 {% block title %}팀 참가하기{% endblock %}
 {% block content %}
 <div class="max-w-3xl mx-auto grid gap-6">
+
   <div class="rounded-2xl border bg-white p-6 shadow-sm">
     <h1 class="text-lg font-semibold mb-3">팀 코드로 참가 요청</h1>
+
+    {% if error %}
+      <div class="mb-3 rounded-lg bg-red-50 text-red-700 px-3 py-2 text-sm">{{ error }}</div>
+    {% endif %}
+    {% if info %}
+      <div class="mb-3 rounded-lg bg-blue-50 text-blue-700 px-3 py-2 text-sm">{{ info }}</div>
+    {% endif %}
+
     <form method="post" action="{% url 'team_request_by_code' %}" class="flex gap-2">
       {% csrf_token %}
-      <input name="join_code" required maxlength="6" class="border rounded-xl px-3 py-2" placeholder="6자리 코드">
+      <input name="join_code" required maxlength="6"
+             value="{{ join_code|default:'' }}"
+             class="border rounded-xl px-3 py-2" placeholder="6자리 코드">
       <button class="px-4 py-2 rounded-xl bg-blue-600 text-white">요청 보내기</button>
     </form>
   </div>
@@ -27,9 +38,7 @@
           <div>
             {% if m.status == "APPROVED" %}
               <a href="{% url 'team_detail' team_id=m.team.id %}"
-                 class="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50">
-                팀으로 가기
-              </a>
+                 class="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50">팀으로 가기</a>
             {% endif %}
           </div>
         </div>

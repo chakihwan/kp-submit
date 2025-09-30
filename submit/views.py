@@ -3,6 +3,7 @@ from django.apps import apps
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import render, redirect, get_object_or_404
@@ -15,6 +16,7 @@ from django.utils.dateparse import parse_datetime
 from django.db import transaction
 from django.db import IntegrityError
 import datetime
+import re
 
 from .models import (
     Team, TeamMembership,
@@ -164,37 +166,61 @@ def team_detail(request, team_id):
 
 # 팀 코드로 참가 요청(POST)
 @login_required
+@require_POST
 def request_join_by_code(request):
-    if request.method != "POST":
-        return HttpResponseBadRequest("잘못된 요청입니다.")
+    join_code = (request.POST.get("join_code") or "").strip()
 
-    code = (request.POST.get("join_code") or "").strip()
-    if not code:
-        return redirect("team_join_page")
+    # 공통: 내 요청 목록(재렌더용)
+    def _render_join(error=None, info=None):
+        my_requests = TeamMembership.objects.filter(student=request.user)\
+                         .select_related("team").order_by("-requested_at")
+        ctx = {"my_requests": my_requests, "error": error, "info": info, "join_code": join_code}
+        return render(request, "teams/join.html", ctx)
 
-    team = get_object_or_404(Team, join_code=code)
+    # 1) 빈 값
+    if not join_code:
+        return _render_join(error="팀 코드를 입력하세요.")
 
-    # 팀장은 바로 상세로
+    # 2) 포맷 체크 (6자리 숫자)
+    if not re.fullmatch(r"\d{6}", join_code):
+        return _render_join(error="팀 코드는 6자리 숫자여야 합니다.")
+
+    # 3) 팀 조회 (없으면 친절 메시지)
+    team = Team.objects.filter(join_code=join_code).first()
+    if not team:
+        return _render_join(error="유효하지 않은 팀 코드입니다. 코드를 다시 확인하세요.")
+
+    # 4) 본인이 팀장일 경우 → 바로 팀 상세
     if request.user == team.owner:
         return redirect("team_detail", team_id=team.id)
 
-    m, created = TeamMembership.objects.get_or_create(
-        team=team, student=request.user, defaults={"status": "PENDING"}
+    # 5) 멤버십 처리
+    mship, created = TeamMembership.objects.get_or_create(
+        team=team, student=request.user,
+        defaults={"status": "PENDING", "requested_at": timezone.now()}
     )
-    if not created and m.status in ("PENDING", "APPROVED"):
-        # 이미 요청/승인 상태면 참가 페이지로
-        return redirect("team_join_page")
 
-    # 새로 대기 상태로 세팅(LEFT/REJECTED 였던 경우 포함)
-    m.status = "PENDING"
-    m.requested_at = timezone.now()
-    m.decided_at = None
-    m.decided_by = None
-    m.save(update_fields=["status", "requested_at", "decided_at", "decided_by"])
+    # 이미 존재하는 경우 상태별 대응
+    if not created:
+        if mship.status == "APPROVED":
+            # 승인 정책: 우리가 '승인 즉시 합류' 로 바꿨으므로 곧바로 팀으로
+            return redirect("team_detail", team_id=team.id)
+        elif mship.status == "PENDING":
+            return _render_join(info=f"이미 '{team.name}' 팀에 참가 요청을 보냈습니다. 승인 대기 중입니다.")
+        elif mship.status in ("REJECTED", "LEFT"):
+            # 재요청 허용
+            mship.status = "PENDING"
+            mship.requested_at = timezone.now()
+            mship.decided_at = None
+            mship.decided_by = None
+            mship.joined_at = None
+            mship.save(update_fields=["status", "requested_at", "decided_at", "decided_by", "joined_at"])
+            return _render_join(info=f"'{team.name}' 팀에 재요청을 보냈습니다.")
 
-    return redirect("team_join_page")
+    # 새 요청 생성됨
+    return _render_join(info=f"'{team.name}' 팀에 참가 요청을 보냈습니다.")
 
-# ===== 교수: 가입요청 목록 =====
+# ===== 팀장 가입요청 목록 =====
 @login_required
 def list_team_requests(request, team_id):
     team = get_object_or_404(Team, pk=team_id)

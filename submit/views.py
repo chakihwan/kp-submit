@@ -107,15 +107,16 @@ def create_team(request):
     if request.method == "POST":
         name = (request.POST.get("name") or "").strip()
         desc = (request.POST.get("description") or "").strip()
+        cover = request.FILES.get("cover")  # ← 추가
+
         if not name:
-            # 파일명도 create_team.html 로 맞춤
-            return render(request, "teams/create_team.html", {"error": "팀명을 입력하세요."})
+            return render(request, "teams/create.html", {"error": "팀명을 입력하세요."})
 
         t = Team(owner=request.user, name=name, description=desc)
+        if cover:
+            t.cover = cover
         t.save()
         return redirect("team_detail", team_id=t.id)
-
-    # ← GET 렌더도 파일명 통일
     return render(request, "teams/create_team.html")
 
 # ===== 학생: 팀 코드로 가입 페이지 =====
@@ -222,32 +223,47 @@ def request_join_by_code(request):
 
 # ===== 팀장 가입요청 목록 =====
 @login_required
-def list_team_requests(request, team_id):
+def team_requests(request, team_id):
     team = get_object_or_404(Team, pk=team_id)
     if request.user != team.owner:
         return HttpResponseForbidden("권한이 없습니다.")
-    pending = team.memberships.filter(status="PENDING").select_related("student")
-    return render(request, 'teams/request_list.html', {'team': team, 'requests': pending})
+    pending = TeamMembership.objects.filter(team=team, status="PENDING").select_related("student").order_by("requested_at")
+    recent  = TeamMembership.objects.filter(team=team).exclude(status="PENDING").select_related("student").order_by("-requested_at")[:50]
+    return render(request, "teams/requests.html", {"team": team, "pending": pending, "recent": recent})
 
-
-# ===== 교수: 승인/거절 =====
 @login_required
+@require_POST
 def approve_team_request(request, membership_id):
     m = get_object_or_404(TeamMembership, pk=membership_id)
-    if request.user != m.team.owner:
+    team = m.team
+    if request.user != team.owner:
         return HttpResponseForbidden("권한이 없습니다.")
-    m.approve(by_user=request.user)  # ✅ joined_at까지 처리됨
-    return redirect("team_request_list", team_id=m.team_id)
+    try:
+        m.approve(by_user=request.user)   # models.py의 approve()가 joined_at도 찍도록 구성
+    except Exception:
+        m.status = "APPROVED"
+        now = timezone.now()
+        m.decided_at = now
+        m.decided_by = request.user
+        m.joined_at  = now
+        m.save(update_fields=["status","decided_at","decided_by","joined_at"])
+    return redirect("team_requests", team_id=team.id)
 
 @login_required
+@require_POST
 def reject_team_request(request, membership_id):
-    membership = get_object_or_404(TeamMembership, pk=membership_id)
-    if request.user != membership.team.owner:
+    m = get_object_or_404(TeamMembership, pk=membership_id)
+    team = m.team
+    if request.user != team.owner:
         return HttpResponseForbidden("권한이 없습니다.")
-    membership.reject(by_user=request.user)
-    messages.info(request, f"{membership.student.username} 거절 처리")
-    return redirect('team_request_list', team_id=membership.team_id)
-
+    try:
+        m.reject(by_user=request.user)
+    except Exception:
+        m.status = "REJECTED"
+        m.decided_at = timezone.now()
+        m.decided_by = request.user
+        m.save(update_fields=["status","decided_at","decided_by"])
+    return redirect("team_requests", team_id=team.id)
 
 # ===== 학생: 승인 후 최종 참가 =====
 @login_required
@@ -304,6 +320,30 @@ def team_detail(request, team_id):
         "is_owner": is_owner,
     }
     return render(request, 'teams/team_detail.html', ctx)
+
+@login_required
+def team_edit(request, team_id):
+    team = get_object_or_404(Team, pk=team_id)
+    if request.user != team.owner:
+        return HttpResponseForbidden("권한이 없습니다.")
+
+    if request.method == "POST":
+        name = (request.POST.get("name") or "").strip()
+        desc = (request.POST.get("description") or "").strip()
+        cover = request.FILES.get("cover")
+
+        if not name:
+            return render(request, "teams/edit.html", {"team": team, "error": "팀명을 입력하세요."})
+
+        team.name = name
+        team.description = desc
+        if cover:
+            team.cover = cover
+        team.save()
+        return redirect("team_detail", team_id=team.id)
+
+    return render(request, "teams/edit.html", {"team": team})
+
 
 @login_required
 def team_delete(request, team_id):
@@ -420,44 +460,57 @@ def assignment_submit(request, team_id, assignment_id):
     team = get_object_or_404(Team, pk=team_id)
     a = get_object_or_404(Assignment, pk=assignment_id, team=team)
 
-    if request.user == team.owner:
-        return HttpResponseForbidden("팀장은 제출 대상이 아닙니다.")
+    # 팀 접근 권한 체크(팀장 또는 승인된 멤버)
+    is_owner = (team.owner_id == request.user.id)
+    is_member = TeamMembership.objects.filter(team=team, student=request.user, status="APPROVED").exists()
+    if not (is_owner or is_member):
+        return HttpResponseForbidden("팀 구성원만 접근할 수 있습니다.")
 
-    is_member = TeamMembership.objects.filter(
-        team=team, student=request.user, status="APPROVED", joined_at__isnull=False
-    ).exists()
-    if not is_member:
-        return HttpResponseForbidden("권한이 없습니다.")
+    # # 팀장은 제출하지 않도록 막고 싶다면(선택)
+    # if is_owner:
+    #     return HttpResponseForbidden("팀장은 제출할 수 없습니다.")
 
+    # 마감된 과제면 수정/제출 불가
+    if getattr(a, "is_closed", False):
+        return HttpResponseForbidden("마감된 과제입니다.")
+
+    # 내 제출 가져오기(없으면 생성)
     sub, _ = Submission.objects.get_or_create(
-        assignment=a, student=request.user, defaults={"status": "not_submitted"}
+        assignment=a, student=request.user,
+        defaults={"status": "not_submitted"}
     )
 
-    # ❌ 수정 불가 조건: 과제 마감됨 / 마감시각 지남 / 이미 채점됨
-    now = timezone.now()
-    if a.is_closed or (a.due_at and now > a.due_at) or sub.status == "graded":
-        return HttpResponseForbidden("이 과제는 더 이상 수정/제출할 수 없습니다.")
-
     if request.method == "POST":
-        file = request.FILES.get("file")
-        comment = (request.POST.get("comment") or "").strip()
+        # 코멘트
+        sub.comment = (request.POST.get("comment") or "").strip()
 
-        if file:
-            last = sub.files.order_by('-version').first()
-            version = (last.version + 1) if last else 1
+        # ✅ 기존 파일 전부 삭제 (레코드+실제 파일)
+        for f in list(sub.files.all()):
+            f.delete()
+
+        # 새 파일 저장
+        uploaded_files = request.FILES.getlist("files")
+        for idx, uf in enumerate(uploaded_files, start=1):
             SubmissionFile.objects.create(
-                submission=sub, file=file, version=version, size=file.size
+                submission=sub,
+                file=uf,
+                version=idx,
+                size=uf.size or 0,
             )
 
-        sub.comment = comment
-        sub.submitted_at = now
+        # 상태/시간 갱신
         sub.status = "submitted"
-        sub.save()
+        sub.submitted_at = timezone.now()
+        sub.save(update_fields=["comment", "status", "submitted_at"])
 
-        # messages.success(request, "제출/수정 완료되었습니다.")
-        return redirect('assignment_detail', team_id=team.id, assignment_id=a.id)
+        return redirect("assignment_detail", team_id=team.id, assignment_id=a.id)
 
-    return render(request, 'assignments/submit.html', {"team": team, "a": a, "sub": sub})
+    # GET: 제출 폼
+    return render(request, "assignments/submit.html", {
+        "team": team,
+        "a": a,
+        "my_sub": sub,
+    })
 
 @login_required
 def assignment_submissions(request, team_id, assignment_id):

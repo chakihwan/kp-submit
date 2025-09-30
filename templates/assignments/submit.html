@@ -1,31 +1,48 @@
 {% extends 'base.html' %}
 {% block title %}과제 제출{% endblock %}
 {% block content %}
-<div class="max-w-xl mx-auto rounded-2xl border bg-white p-6 shadow-sm">
-  <h1 class="text-xl font-semibold">{{ a.title }} 제출</h1>
-  <p class="text-sm text-gray-600">마감: {{ a.due_at|date:"Y-m-d H:i" }}</p>
+<div class="max-w-2xl mx-auto rounded-2xl border bg-white p-6 shadow-sm">
+  <div class="flex items-center justify-between mb-3">
+    <h1 class="text-xl font-semibold">{{ a.title }} 제출</h1>
+    <a class="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50"
+       href="{% url 'assignment_detail' team_id=team.id assignment_id=a.id %}">과제로 돌아가기</a>
+  </div>
 
-  <form method="post" enctype="multipart/form-data" class="mt-4 space-y-3">
+  <p class="text-sm text-gray-600 mb-3">
+    제출을 다시 하면 <strong>기존 파일은 모두 삭제</strong>되고, 업로드한 파일로 <strong>완전히 교체</strong>됩니다.
+  </p>
+
+  <form method="post" enctype="multipart/form-data" class="grid gap-4">
     {% csrf_token %}
     <div>
-      <label class="block text-sm text-gray-700 mb-1">제출 메모</label>
-      <textarea name="comment" rows="3" class="w-full border rounded-xl px-3 py-2">{{ sub.comment }}</textarea>
+      <label class="text-sm text-gray-700">코멘트(선택)</label>
+      <textarea name="comment" rows="3" class="w-full border rounded-xl px-3 py-2">{{ my_sub.comment }}</textarea>
     </div>
     <div>
-      <label class="block text-sm text-gray-700 mb-1">파일 업로드 (선택)</label>
-      <input type="file" name="file" class="w-full border rounded-xl px-3 py-2">
-      {% if sub.files.all %}
-        <div class="text-sm text-gray-600 mt-1">이전 버전:
-          {% for f in sub.files.all %}
-            <span class="px-2 py-0.5 rounded border text-xs">{{ f.version }}</span>
-          {% endfor %}
-        </div>
-      {% endif %}
+      <label class="text-sm text-gray-700">파일 업로드</label>
+      <input type="file" name="files" multiple required class="mt-1 w-full border rounded-xl px-3 py-2" />
+      <p class="text-xs text-gray-500 mt-1">여러 파일을 선택할 수 있습니다. 이전 파일은 모두 삭제됩니다.</p>
     </div>
-    <div class="flex gap-2">
-      <button class="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-500" type="submit">제출</button>
-      <a href="{% url 'assignment_detail' team_id=team.id assignment_id=a.id %}" class="px-4 py-2 rounded-xl border hover:bg-gray-50">취소</a>
+
+    <div class="flex items-center gap-2">
+      <button class="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-500">제출</button>
+      <a href="{% url 'assignment_detail' team_id=team.id assignment_id=a.id %}"
+         class="px-4 py-2 rounded-xl border hover:bg-gray-50">취소</a>
     </div>
   </form>
+
+  {% if my_sub.files.all %}
+    <div class="mt-6">
+      <div class="text-sm font-semibold mb-1">현재 제출된 파일</div>
+      <div class="text-sm text-gray-600">
+        {% for f in my_sub.files.all %}
+          <a class="underline text-blue-600" href="{{ f.file.url }}" download>v{{ f.version }}</a>
+          {% if not forloop.last %}, {% endif %}
+        {% empty %}
+          -
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
 </div>
 {% endblock %}

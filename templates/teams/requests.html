@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}가입 요청 – {{ team.name }}{% endblock %}
+{% block content %}
+
+<div class="rounded-2xl border bg-white p-6 shadow-sm">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h1 class="text-xl font-semibold">가입 요청 · {{ team.name }}</h1>
+      <p class="text-sm text-gray-600">대기 중인 요청을 승인/거절하세요.</p>
+    </div>
+    <a href="{% url 'team_detail' team_id=team.id %}" class="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50">
+      팀 상세로
+    </a>
+  </div>
+
+  <h2 class="text-sm font-semibold text-gray-700 mb-2">대기 중</h2>
+  {% if pending %}
+    <div class="divide-y rounded-xl border">
+      {% for m in pending %}
+      <div class="p-3 flex items-center justify-between">
+        <div>
+          <div class="font-medium">{{ m.student.get_full_name|default:m.student.username }}</div>
+          <div class="text-xs text-gray-500">요청: {{ m.requested_at|date:"Y-m-d H:i" }}</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <form method="post" action="{% url 'team_request_approve' membership_id=m.id %}">
+            {% csrf_token %}
+            <button class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-500">승인</button>
+          </form>
+
+          <form method="post" action="{% url 'team_request_reject' membership_id=m.id %}">
+            {% csrf_token %}
+            <button class="px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm hover:bg-red-500">거절</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-sm text-gray-600 mb-4">대기 중인 요청이 없습니다.</p>
+  {% endif %}
+
+  <h2 class="text-sm font-semibold text-gray-700 mt-6 mb-2">최근 처리</h2>
+  {% if recent %}
+    <div class="divide-y rounded-xl border">
+      {% for m in recent %}
+      <div class="p-3 flex items-center justify-between">
+        <div>
+          <div class="font-medium">{{ m.student.get_full_name|default:m.student.username }}</div>
+          <div class="text-xs text-gray-500">
+            상태: {{ m.get_status_display }} · 요청: {{ m.requested_at|date:"Y-m-d H:i" }}
+            {% if m.decided_at %} · 결정: {{ m.decided_at|date:"Y-m-d H:i" }}{% endif %}
+          </div>
+        </div>
+        {% if m.status == "APPROVED" %}
+          <a href="{% url 'team_detail' team_id=team.id %}" class="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50">팀으로</a>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-sm text-gray-600">최근 처리된 요청이 없습니다.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

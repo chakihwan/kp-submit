@@ -2,45 +2,140 @@
 {% block title %}팀 홈{% endblock %}
 {% block content %}
 
-<!-- 상단 툴바: 바디 안에 버튼 배치 -->
+<!-- 상단 툴바 -->
 <div class="flex items-center justify-between mb-4">
   <h1 class="text-xl font-semibold">내 팀</h1>
   <div class="flex items-center gap-2">
-    <a href="{% url 'team_join_page' %}" class="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50">
-      팀 참가하기
-    </a>
-    <a href="{% url 'create_team' %}" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-500">
-      팀 만들기
-    </a>
+    <a href="{% url 'team_join_page' %}" class="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50">팀 참가하기</a>
+    <a href="{% url 'create_team' %}" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-500">팀 만들기</a>
   </div>
 </div>
 
 {% if teams %}
-  <div class="grid md:grid-cols-2 gap-3">
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
     {% for t in teams %}
-      <a href="{% url 'team_detail' team_id=t.id %}"
-         class="rounded-2xl border bg-white p-4 shadow-sm hover:bg-gray-50 transition">
+    <div class="rounded-2xl border bg-white shadow-sm overflow-hidden">
+      <!-- 대표 이미지 영역 -->
+    {% if t.cover %}
+      <a href="{% url 'team_detail' team_id=t.id %}">
+        <img src="{{ t.cover.url }}" alt="{{ t.name }}" class="w-full h-36 object-cover rounded-t-2xl">
+      </a>
+    {% else %}
+      <a href="{% url 'team_detail' team_id=t.id %}">
+        <div class="w-full h-36 flex items-center justify-center rounded-b-none"
+            data-color-seed="{{ t.id }}-{{ t.name|default:'' }}">
+          <span class="text-2xl font-semibold text-white drop-shadow">
+            {{ t.name|slice:":1"|upper }}
+          </span>
+        </div>
+      </a>
+    {% endif %}
+      <!-- 본문 -->
+      <div class="p-4">
         <div class="flex items-center justify-between">
-          <div class="font-semibold">{{ t.name }}</div>
+          <a href="{% url 'team_detail' team_id=t.id %}" class="font-semibold hover:underline">{{ t.name }}</a>
           {% if t.owner_id == request.user.id %}
             <span class="text-xs px-2 py-0.5 rounded bg-gray-800 text-white">내가 만든 팀</span>
           {% endif %}
         </div>
+
         {% if t.description %}
-          <div class="text-sm text-gray-600 mt-1 line-clamp-2">{{ t.description }}</div>
+          <p class="mt-1 text-sm text-gray-600 line-clamp-2">{{ t.description }}</p>
         {% endif %}
-        <div class="text-xs text-gray-500 mt-2">팀 코드: {{ t.join_code }}</div>
-      </a>
+
+        <!-- 팀 관리자/코드 -->
+        <div class="mt-3 flex items-center justify-between">
+          <div class="text-xs text-gray-600">
+            관리자: {{ t.owner.get_full_name|default:t.owner.username }}
+          </div>
+
+          <!-- 코드 확대 버튼 -->
+          <button type="button"
+                  class="text-xs px-2 py-1 rounded border hover:bg-gray-50"
+                  data-open-code="{{ t.id }}">
+            코드 보기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 코드 확대 모달 -->
+    <dialog id="code-modal-{{ t.id }}" class="rounded-2xl p-0 w-[320px] max-w-[90vw]">
+      <div class="p-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="font-semibold">{{ t.name }}</div>
+          <form method="dialog">
+            <button class="text-sm px-2 py-1 rounded border">닫기</button>
+          </form>
+        </div>
+        <div class="border rounded-xl p-4 text-center">
+          <div class="text-sm text-gray-500 mb-1">팀 코드</div>
+          <div class="text-3xl font-mono tracking-widest select-all">{{ t.join_code }}</div>
+        </div>
+        <div class="mt-3 flex items-center justify-end gap-2">
+          <button class="text-sm px-2 py-1 rounded border" data-copy="{{ t.join_code }}">복사</button>
+        </div>
+      </div>
+    </dialog>
     {% endfor %}
   </div>
 {% else %}
   <div class="rounded-2xl border bg-white p-6 shadow-sm">
     <p class="text-sm text-gray-600">
-      아직 표시할 팀이 없습니다. 
+      아직 표시할 팀이 없습니다.
       <a class="underline text-blue-600" href="{% url 'team_join_page' %}">팀 참가하기</a> 또는
       <a class="underline text-blue-600" href="{% url 'create_team' %}">팀 만들기</a>를 진행하세요.
     </p>
   </div>
 {% endif %}
+
+<!-- 모달/복사용 최소 JS -->
+<script>
+document.addEventListener('click', function(e) {
+  const openBtn = e.target.closest('[data-open-code]');
+  if (openBtn) {
+    const id = openBtn.getAttribute('data-open-code');
+    const dlg = document.getElementById('code-modal-' + id);
+    if (dlg && dlg.showModal) dlg.showModal();
+  }
+  const copyBtn = e.target.closest('[data-copy]');
+  if (copyBtn) {
+    const text = copyBtn.getAttribute('data-copy');
+    navigator.clipboard?.writeText(text);
+    copyBtn.textContent = '복사됨';
+    setTimeout(() => copyBtn.textContent = '복사', 1200);
+  }
+});
+
+/** 간단한 문자열 해시 → 0..2^32-1 */
+function hash32(str) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0; // FNV-1a 변형
+  }
+  return h >>> 0;
+}
+
+/** 해시값으로 파스텔 HSL 생성 */
+function pastelFromHash(h) {
+  // hue: 0..360, sat: 55~70%, light: 70~82% (부드러운 파스텔)
+  const hue = h % 360;
+  const sat = 55 + (h % 16);   // 55..70
+  const lig = 70 + (h % 12);   // 70..82
+  return `hsl(${hue}deg ${sat}% ${lig}%)`;
+}
+
+document.querySelectorAll('[data-color-seed]').forEach(el => {
+  const seed = el.getAttribute('data-color-seed') || '';
+  const h = hash32(seed);
+  el.style.background = pastelFromHash(h);
+
+  // 테두리 색도 살짝 어둡게
+  const borderHue = (h + 180) % 360;
+  el.closest('.rounded-2xl')?.style.setProperty('border-color', `hsl(${borderHue}deg 25% 75%)`);
+});
+
+</script>
 
 {% endblock %}

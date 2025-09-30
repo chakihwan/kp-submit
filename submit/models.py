@@ -31,6 +31,8 @@ class Team(models.Model):
     created_at = models.DateTimeField("생성일시", auto_now_add=True)
     updated_at = models.DateTimeField("수정일시", auto_now=True)
 
+    cover = models.ImageField("대표 이미지", upload_to="team_covers/", blank=True, null=True)  
+
     class Meta:
         verbose_name = "팀"
         verbose_name_plural = "팀"
@@ -176,12 +178,13 @@ class SubmissionFile(models.Model):
     version = models.PositiveIntegerField("버전", default=1)
     size = models.PositiveIntegerField("크기(Byte)", default=0)
 
-    def __str__(self): return f"{self.submission} v{self.version}"
-
-    class Meta:
-        verbose_name = "제출 파일"
-        verbose_name_plural = "제출 파일"
-        ordering = ["submission_id", "version"]
+    def delete(self, using=None, keep_parents=False):
+        # 저장소에서 실제 파일 삭제
+        storage = self.file.storage
+        name = self.file.name
+        super().delete(using=using, keep_parents=keep_parents)
+        if name and storage.exists(name):
+            storage.delete(name)
 
 
 class Grade(models.Model):

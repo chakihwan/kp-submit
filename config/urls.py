@@ -19,6 +19,8 @@ from django.contrib import admin
 from django.urls import path
 from submit import views
 from django.views.generic import RedirectView
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -35,12 +37,18 @@ urlpatterns = [
     path('teams/join', views.join_page, name='team_join_page'),
     path('teams/<int:team_id>', views.team_detail, name='team_detail'),
     path('teams/<int:team_id>/regen_code', views.regen_team_code, name='regen_team_code'),
-    path('teams/<int:team_id>/requests', views.list_team_requests, name='team_request_list'),
-    path('teams/requests/<int:membership_id>/approve', views.approve_team_request, name='team_request_approve'),
-    path('teams/requests/<int:membership_id>/reject', views.reject_team_request, name='team_request_reject'),
+    
+    # 가입요청 목록(팀별)
+    path("teams/<int:team_id>/requests", views.team_requests, name="team_requests"),
+
+    # 승인/거절 (membership_id만 받음)
+    path("teams/requests/<int:membership_id>/approve", views.approve_team_request, name="team_request_approve"),
+    path("teams/requests/<int:membership_id>/reject",  views.reject_team_request,  name="team_request_reject"),
+    
     path('teams/request_by_code', views.request_join_by_code, name='team_request_by_code'),
     path('teams/<int:team_id>/join', views.join_team, name='team_join'),
     path('teams/<int:team_id>/delete', views.team_delete, name='team_delete'),
+    path("teams/<int:team_id>/edit", views.team_edit, name="team_edit"),
     
     #  과제: 생성/상세/제출/제출목록
     path('teams/<int:team_id>/assignments/create', views.assignment_create, name='assignment_create'),
@@ -60,3 +68,6 @@ urlpatterns = [
     path('teams/<int:team_id>/assignments/<int:assignment_id>/reopen',
         views.assignment_reopen, name='assignment_reopen'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,6 +1,5 @@
 # 한국폴리텍대학 과제 제출 시스템 (KPU-Submit)
 
-<img src="https://raw.githubusercontent.com/chakihwan/kp-submit/main/static/img/polytech.png" alt="logo" width="150">
 
 ## 📖 프로젝트 소개 (Introduction)
 

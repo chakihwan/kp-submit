@@ -1,6 +1,5 @@
 # 한국폴리텍대학 과제 제출 시스템 (KPU-Submit)
 
-<img src="https://raw.githubusercontent.com/chakihwan/kp-submit/main/static/img/polytech.png" alt="logo" width="150">
 
 ## 📖 프로젝트 소개 (Introduction)
 
@@ -70,7 +69,7 @@ venv\Scripts\activate
 # 이 프로젝트는 Django 외 별도 패키지가 필요하지 않습니다.
 pip install Django
 ```
-> **Tip:** `pip freeze > requirements.txt` 명령어로 의존성 목록 파일을 만들어두면 다른 환경에서 `pip install -r requirements.txt`로 한 번에 설치할 수 있습니다.
+
 
 ### 4. 데이터베이스 마이그레이션
 데이터베이스 테이블을 생성합니다.

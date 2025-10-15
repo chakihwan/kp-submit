@@ -4,21 +4,21 @@
 <head>
   <meta charset="utf-8"/>
   <title>회원가입</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+
   <div class="w-full max-w-sm bg-white border rounded-2xl p-6 shadow-sm">
-    <div class="flex items-center gap-3 mb-4">
-      <img src="{% static 'img/polytech.png' %}" class="w-auto h-[64px]" alt="logo">
-      <div class="font-semibold leading-tight">
-        한국폴리텍대학 - AISW <br>과제 제출 시스템
-      </div>
+    <div class="flex items-center gap-2 mb-4">
+      <img src="{% static 'img/polytech.png' %}" class="w-auto h-[50px]" alt="logo">
+      <div class="font-semibold">한국폴리텍대학 - AISW <br>과제 제출 시스템</div>
     </div>
 
-    {% if form.errors %}
-      <div class="mb-3 text-sm text-red-600">
-        입력값을 확인해주세요.
+    {% if messages %}
+      <div class="mb-3 text-sm">
+        {% for m in messages %}
+          <div class="px-3 py-2 rounded {{ m.tags|yesno:'bg-blue-50,text-blue-800,bg-red-50 text-red-800' }}">{{ m }}</div>
+        {% endfor %}
       </div>
     {% endif %}
 
@@ -27,59 +27,45 @@
 
       <div>
         <label class="text-sm text-gray-600">아이디</label>
-        <input type="text" name="username" value="{{ form.data.username }}" required
-               class="w-full mt-1 border rounded-xl px-3 py-2">
-        {% if form.username.errors %}
-          <p class="text-xs text-red-600 mt-1">{{ form.username.errors.0 }}</p>
-        {% endif %}
+        <input type="text" name="username" required class="w-full mt-1 border rounded-xl px-3 py-2">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-sm text-gray-600">비밀번호</label>
+          <input type="password" name="password1" required class="w-full mt-1 border rounded-xl px-3 py-2">
+        </div>
+        <div>
+          <label class="text-sm text-gray-600">비밀번호 확인</label>
+          <input type="password" name="password2" required class="w-full mt-1 border rounded-xl px-3 py-2">
+        </div>
       </div>
 
       <div>
-        <label class="text-sm text-gray-600">비밀번호</label>
-        <input type="password" name="password1" required
-               class="w-full mt-1 border rounded-xl px-3 py-2">
-        {% if form.password1.errors %}
-          <p class="text-xs text-red-600 mt-1">{{ form.password1.errors.0 }}</p>
-        {% endif %}
+        <label class="text-sm text-gray-600">이름</label>
+        <input type="text" name="first_name" required class="w-full mt-1 border rounded-xl px-3 py-2">
       </div>
 
       <div>
-        <label class="text-sm text-gray-600">비밀번호 확인</label>
-        <input type="password" name="password2" required
-               class="w-full mt-1 border rounded-xl px-3 py-2">
-        {% if form.password2.errors %}
-          <p class="text-xs text-red-600 mt-1">{{ form.password2.errors.0 }}</p>
-        {% endif %}
+        <label class="text-sm text-gray-600">학번</label>
+        <input type="text" name="student_id" required class="w-full mt-1 border rounded-xl px-3 py-2">
       </div>
 
       <div>
-        <label class="text-sm text-gray-600">이메일 (필수)</label>
-        <input type="email" name="email" value="{{ form.data.email }}"
-               class="w-full mt-1 border rounded-xl px-3 py-2">
-        {% if form.email.errors %}
-          <p class="text-xs text-red-600 mt-1">{{ form.email.errors.0 }}</p>
-        {% endif %}
+        <label class="text-sm text-gray-600">이메일</label>
+        <input type="email" name="email" required class="w-full mt-1 border rounded-xl px-3 py-2">
       </div>
 
-      <!-- 학번. 필요없으면 이 블록 삭제해도 됩니다 -->
-      <div>
-        <label class="text-sm text-gray-600">학번 (필수)</label>
-        <input type="text" name="student_id" value="{{ form.data.student_id }}"
-               class="w-full mt-1 border rounded-xl px-3 py-2">
-        {% if form.student_id.errors %}
-          <p class="text-xs text-red-600 mt-1">{{ form.student_id.errors.0 }}</p>
-        {% endif %}
-      </div>
-
-      <button type="submit" class="w-full mt-2 px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-500">
+      <button type="submit" class="w-full mt-2 px-4 py-2 rounded-xl bg-gray-900 text-white">
         회원가입
       </button>
-
-      <div class="text-center text-sm text-gray-600">
-        이미 계정이 있나요?
-        <a class="text-blue-600 underline" href="{% url 'login' %}">로그인</a>
-      </div>
     </form>
+
+    <div class="w-full text-center mt-3 text-sm text-gray-700">
+      이미 계정이 있으신가요?
+      <a href="{% url 'login' %}" class="text-blue-600 underline">로그인</a>
+    </div>
   </div>
+
 </body>
 </html>

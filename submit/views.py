@@ -15,13 +15,15 @@ from django.db.models import Q, Count
 from django.utils.dateparse import parse_datetime
 from django.db import transaction
 from django.db import IntegrityError
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 import datetime
 import re
 
 from .models import (
     Team, TeamMembership,
     Assignment, Submission, SubmissionFile,
-    Grade,
+    Grade,User,
     # 과제/제출 뷰 추가 예정이면 사용
     # Grade, Notification
 )
@@ -72,21 +74,65 @@ class SimpleSignupForm(UserCreationForm):
 
 
 def signup(request):
-    if request.method == "GET":
-        # 로그인/로그아웃 잔여 메시지 비우고 싶으면 유지, 아니면 이 두 줄 삭제
-        list(messages.get_messages(request))
-
     if request.method == "POST":
-        form = SimpleSignupForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, "회원가입이 완료되었습니다.")  # ← 임포트만 있으면 정상
-            return redirect("teacher_team_list")
-    else:
-        form = SimpleSignupForm()
-    return render(request, "registration/signup.html", {"form": form})
+        username    = (request.POST.get("username") or "").strip()
+        password1   = request.POST.get("password1") or ""
+        password2   = request.POST.get("password2") or ""
+        first_name  = (request.POST.get("first_name") or "").strip()  # 이름
+        student_id  = (request.POST.get("student_id") or "").strip()  # 학번
+        email       = (request.POST.get("email") or "").strip()
 
+        # 1) 필수값 체크
+        required_missing = []
+        for field_label, value in [
+            ("아이디", username),
+            ("비밀번호", password1),
+            ("비밀번호 확인", password2),
+            ("이름", first_name),
+            ("학번", student_id),
+            ("이메일", email),
+        ]:
+            if not value:
+                required_missing.append(field_label)
+        if required_missing:
+            messages.error(request, f"필수 항목 누락: {', '.join(required_missing)}")
+            return render(request, "registration/signup.html")
+
+        # 2) 비밀번호 일치/검증
+        if password1 != password2:
+            messages.error(request, "비밀번호가 일치하지 않습니다.")
+            return render(request, "registration/signup.html")
+        try:
+            validate_password(password1)
+        except ValidationError as e:
+            messages.error(request, " ".join(e.messages))
+            return render(request, "registration/signup.html")
+
+        # 3) 중복 체크
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "이미 사용 중인 아이디입니다.")
+            return render(request, "registration/signup.html")
+        StudentProfile = apps.get_model("submit", "StudentProfile")
+        if StudentProfile.objects.filter(student_id=student_id).exists():
+            messages.error(request, "이미 등록된 학번입니다.")
+            return render(request, "registration/signup.html")
+
+        # 4) 생성 트랜잭션
+        with transaction.atomic():
+            user = User.objects.create_user(
+                username=username,
+                password=password1,
+                email=email,
+                first_name=first_name,   # 이름 저장
+                is_staff=False           # 기본은 일반 사용자
+            )
+            StudentProfile.objects.create(user=user, student_id=student_id)
+
+        messages.success(request, "회원가입이 완료되었습니다. 로그인합니다.")
+        login(request, user)
+        return redirect("teacher_team_list")  # 로그인 후 랜딩 (팀 홈)
+
+    return render(request, "registration/signup.html")
 # ===== 교수: 내 팀 목록 =====
 @login_required
 def teacher_team_list(request):

@@ -4,9 +4,9 @@
 
 <div class="flex items-center justify-between bg-gray-100 px-6 py-4 rounded-t-2xl border-b">
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">{{ team.name }}</h1>
+    <h1 class="text-2xl font-bold text-gray-900">팀 : {{ team.name }}</h1>
     {% if team.description %}
-      <p class="text-sm text-gray-600 mt-1">{{ team.description }}</p>
+      <p class="text-sm text-gray-600 mt-1">팀 설명 : {{ team.description }}</p>
     {% endif %}
   </div>
 
@@ -22,8 +22,8 @@
       </a>
     {% else %}
       <a href="{% url 'teacher_team_list' %}"
-         class="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50">
-        ← 팀 목록으로
+         class="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium shadow hover:bg-blue-500 transition">
+         팀 목록으로
       </a>
     {% endif %}
   </div>

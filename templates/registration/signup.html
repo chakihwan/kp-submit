@@ -53,7 +53,7 @@
       </div>
 
       <div>
-        <label class="text-sm text-gray-600">이메일 (선택)</label>
+        <label class="text-sm text-gray-600">이메일 (필수)</label>
         <input type="email" name="email" value="{{ form.data.email }}"
                class="w-full mt-1 border rounded-xl px-3 py-2">
         {% if form.email.errors %}
@@ -61,9 +61,9 @@
         {% endif %}
       </div>
 
-      <!-- 학번(선택). 필요없으면 이 블록 삭제해도 됩니다 -->
+      <!-- 학번. 필요없으면 이 블록 삭제해도 됩니다 -->
       <div>
-        <label class="text-sm text-gray-600">학번 (선택)</label>
+        <label class="text-sm text-gray-600">학번 (필수)</label>
         <input type="text" name="student_id" value="{{ form.data.student_id }}"
                class="w-full mt-1 border rounded-xl px-3 py-2">
         {% if form.student_id.errors %}

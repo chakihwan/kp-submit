@@ -7,7 +7,7 @@
       <h1 class="text-xl font-semibold">제출 현황 – {{ a.title }}</h1>
       <div class="text-sm text-gray-600">마감: {{ a.due_at|date:"Y-m-d H:i" }}</div>
     </div>
-    <a class="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50"
+    <a class="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium shadow hover:bg-blue-500 transition"
        href="{% url 'assignment_detail' team_id=team.id assignment_id=a.id %}">
       과제로 돌아가기
     </a>

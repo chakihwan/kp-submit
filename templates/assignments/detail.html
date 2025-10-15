@@ -2,53 +2,64 @@
 {% block title %}과제 상세{% endblock %}
 {% block content %}
 <div class="grid gap-4">
-  <div class="rounded-2xl border bg-white p-6 shadow-sm">
+
+  <!-- 상단 헤더: 브레드크럼 + 보조 링크 -->
+  <div class="rounded-2xl border bg-white p-5 shadow-sm">
+    <!-- 브레드크럼 -->
+    <nav class="text-sm text-gray-500 mb-2">
+      <a href="{% url 'teacher_team_list' %}" class="hover:underline">팀 홈</a>
+      <span class="mx-1">›</span>
+      <a href="{% url 'team_detail' team_id=team.id %}" class="hover:underline">{{ team.name }}</a>
+      <span class="mx-1">›</span>
+      <a href="{% url 'team_detail' team_id=team.id %}#assignments" class="hover:underline">과제</a>
+      <span class="mx-1">›</span>
+      <span class="text-gray-700">{{ a.title }}</span>
+    </nav>
+
     <div class="flex items-start justify-between">
-    <div>
+      <div>
         <h1 class="text-xl font-semibold">{{ a.title }}</h1>
         <div class="text-sm text-gray-600">
-        마감: {{ a.due_at|date:"Y-m-d H:i" }}
-        · 배점 {{ a.max_score }}
-        · {% if a.is_closed %}<span class="text-red-600 font-semibold">마감됨</span>{% else %}진행중{% endif %}
+          마감: {{ a.due_at|date:"Y-m-d H:i" }}
+          · 배점 {{ a.max_score }}
+          · {% if a.is_closed %}<span class="text-red-600 font-semibold">마감됨</span>{% else %}진행중{% endif %}
         </div>
-    </div>
-
-        <!-- 팀 상세로 돌아가기 -->
-    <a href="{% url 'team_detail' team_id=team.id %}"
-          class="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium shadow hover:bg-blue-500 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-              stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          팀 상세로 돌아가기
-    </a>
-
-      <!-- 출제자(팀장) 버튼 -->
-      {% if is_owner %}
-      <div class="flex gap-2">
-        <a class="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50"
-           href="{% url 'assignment_submissions' team_id=team.id assignment_id=a.id %}">
-          제출 현황
-        </a>
-        {% if a.is_closed %}
-          <a class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-sm hover:bg-gray-600"
-             href="{% url 'assignment_reopen' team_id=team.id assignment_id=a.id %}">
-            마감 해제
-          </a>
-        {% else %}
-          <a class="px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm hover:bg-red-500"
-             href="{% url 'assignment_close' team_id=team.id assignment_id=a.id %}">
-            과제 마감
-          </a>
-        {% endif %}
       </div>
-      {% endif %}
-    </div>
 
-    <!-- <p class="mt-3 text-gray-700 whitespace-pre-line">{{ a.description|default:"(설명 없음)" }}</p> -->
+      <!-- 우측 보조 링크: 과제 목록으로 (작고 덜 눈에 띄게) -->
+      <a href="{% url 'team_detail' team_id=team.id %}#assignments"
+         class="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium shadow hover:bg-blue-500 transition">
+        과제 목록
+      </a>
+    </div>
   </div>
 
-  <!-- 학생 영역 -->
+  {# 이하 기존 내용 유지 (출제자 버튼/학생 제출 영역 등) #}
+
+  <!-- 출제자(팀장) 버튼 -->
+  {% if is_owner %}
+  <div class="rounded-2xl border bg-white p-4 shadow-sm">
+    <div class="flex items-center gap-2">
+      <a class="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50"
+         href="{% url 'assignment_submissions' team_id=team.id assignment_id=a.id %}">
+        제출 현황
+      </a>
+      {% if a.is_closed %}
+        <a class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-sm hover:bg-gray-600"
+           href="{% url 'assignment_reopen' team_id=team.id assignment_id=a.id %}">
+          마감 해제
+        </a>
+      {% else %}
+        <a class="px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm hover:bg-red-500"
+           href="{% url 'assignment_close' team_id=team.id assignment_id=a.id %}">
+          과제 마감
+        </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 학생 영역 (기존 그대로) -->
   {% if not is_owner %}
   <div class="rounded-2xl border bg-white p-6 shadow-sm">
     {% if my_grade %}
@@ -83,5 +94,6 @@
     {% endif %}
   </div>
   {% endif %}
+
 </div>
 {% endblock %}

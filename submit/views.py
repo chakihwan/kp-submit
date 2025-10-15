@@ -564,7 +564,12 @@ def assignment_submissions(request, team_id, assignment_id):
     a = get_object_or_404(Assignment, pk=assignment_id, team=team)
     if request.user != team.owner:
         return HttpResponseForbidden("팀장만 확인할 수 있습니다.")
-    subs = Submission.objects.filter(assignment=a).select_related("student").prefetch_related("files")
+    subs = (
+    Submission.objects
+    .filter(assignment=a)
+    .select_related("student", "student__studentprofile")  # ← 이름/학번 접근 빠르게
+    .prefetch_related("files")                             # ← 파일 목록
+)
     return render(request, 'assignments/submissions.html', {"team": team, "a": a, "subs": subs})
 
 class GradeForm(forms.Form):

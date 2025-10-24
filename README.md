@@ -15,8 +15,6 @@
 | **과제 제출 페이지** | **제출 현황 및 채점** | **가입 요청 관리** |
 |![과제 제출 페이지](https://github.com/user-attachments/assets/1359efb1-d016-4505-90a1-cc82139b2d02)|![제출 현황 및 채점](https://github.com/user-attachments/assets/2365a78b-54e1-4977-8a40-a8cb9bfc3dc9)|![가입 요청 관리](https://github.com/user-attachments/assets/43e8a149-d627-482b-8328-951c6436fe51)|
 
-*(스크린샷 이미지를 프로젝트 폴더(예: `.github/images/`)에 추가하고 위 `ここにスクリーンショットを挿入` 부분을 `![이미지 설명](이미지_경로)`로 수정하세요.)*
-
 ---
 
 ## ✨ 주요 기능 (Features)

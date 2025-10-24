@@ -9,9 +9,9 @@
 
 ## 📸 주요 화면 스크린샷 (Screenshots)
 
-| 로그인 & 회원가입 | 팀 목록 (메인) | 팀 상세 및 과제 목록 |
+| 로그인 & 회원가입 | 팀 목록 (메인) | 과제 등록 |
 | :---: | :---: | :---: |
-| ![로그인](https://github.com/user-attachments/assets/a1c71e0f-9399-460b-b04e-b615c4b5629b)|![팀 목록](https://github.com/user-attachments/assets/a7e80369-9bb3-4f84-9365-56d582c80761)||
+| ![로그인](https://github.com/user-attachments/assets/a1c71e0f-9399-460b-b04e-b615c4b5629b)|![팀 목록](https://github.com/user-attachments/assets/a7e80369-9bb3-4f84-9365-56d582c80761)|![과제 등록](https://github.com/user-attachments/assets/e9f760fd-37a3-47ca-af27-56d948d5cb78)|
 | **과제 제출 페이지** | **제출 현황 및 채점** | **가입 요청 관리** |
 |![과제 제출 페이지](https://github.com/user-attachments/assets/1359efb1-d016-4505-90a1-cc82139b2d02)|![제출 현황 및 채점](https://github.com/user-attachments/assets/2365a78b-54e1-4977-8a40-a8cb9bfc3dc9)|![가입 요청 관리](https://github.com/user-attachments/assets/43e8a149-d627-482b-8328-951c6436fe51)|
 
